@@ -1,0 +1,26 @@
+{
+  "name": "bluebird-as-q",
+  "version": "0.0.1",
+  "description": "JS Promises with full Q performance, backed by the performance of bluebird",
+  "main": "q.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phlogisticfugu/bluebird-as-q.git"
+  },
+  "author": "phlogisitfugu@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/phlogisticfugu/bluebird-as-q/issues"
+  },
+  "homepage": "https://github.com/phlogisticfugu/bluebird-as-q#readme",
+  "dependencies": {
+    "bluebird": "^2.9.34"
+  },
+  "devDependencies": {
+    "jasmine": "^2.3.2",
+    "q": "^1.4.1"
+  }
+}
