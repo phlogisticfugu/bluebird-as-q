@@ -1,49 +1,74 @@
 /* jshint node:true */
 'use strict';
 
-var bluebird = require('bluebird');
+var Promise = require('bluebird/js/main/bluebird');
+var PromisePrototype = Promise.prototype;
 
+var PromiseResolver = require('bluebird/js/main/promise_resolver');
+var PromiseResolverPrototype = PromiseResolverPrototype;
+
+/*
+ * Define Q as a function
+ */
 function Q (value) {
-  return bluebird.resolve(value);
+  return Promise.resolve(value);
 }
 
 /*
- * Use all of the static methods directly from bluebird
- * which do not require renaming or rejiggering
+ * Copy all of the static functions over as-is
  */
-Q.prototype = bluebird;
+objectAssign(Q, Promise);
 
-module.exports = Q;
+/*
+ * Alias some things for compatibility for static functions
+ */
+Q.deferred = Q.defer;
 
-Q.defer = function() {
-    var deferred = {};
-    var promise = new bluebird(function(resolve, reject) {
-        deferred.resolve = deferred.fulfill = resolve;
-        deferred.reject = reject;
+/*
+ * Alias some things for compatibility for methods on promise obejcts
+ */
+PromisePrototype.fail = PromisePrototype.catch;
+PromisePrototype.progress = PromisePrototype.progressed;
+PromisePrototype.fin = PromisePrototype.finally;
+PromisePrototype.allSettled = Promise.all;
+
+/*
+ * Define some missing functions
+ */
+PromisePrototype.post = PromisePrototype.mapply =
+  function post (methodName, args) {
+    return this.then(function (o) {
+      return o[methodName].apply(o, args);
     });
-    deferred.promise = promise;
-    deferred.notify = bind(promise._progress, promise);
-    
-    deferred.makeNodeResolver = function() {
-        return function(err, result) {
-            if (err) {
-              return deferred.reject(err);
-            }
-            
-            if (arguments.length > 2) {
-              return deferred.resolve([].slice.call(arguments, 1));
-            } else {
-              return deferred.resolve(result);
-            }
-        };
-    };
-    return deferred;
+  }; 
+
+PromisePrototype.invoke = function invoke (name) {
+  var args = [].slice.call(arguments, 1);
+  return this.post(name, args);
 };
-Q.deferred = Q.pending = Q.defer;
 
-Q.prototype.fail = bluebird.prototype.caught;
+PromisePrototype.keys = function keys () {
+  return this.then(function (o) {
+    return Object.keys(o);
+  });
+};
 
-
+/*
+ * Polyfill for Object.assign()
+ */
+function objectAssign (target, source) {
+  if (Object.assign) {
+    return Object.assign(target, source);
+    
+  } else {
+    for (var key in source) {
+      if (source.hasOwnProperty(key)) {
+        target[key] = source[key];
+      }
+    }
+    return target;
+  }
+}
 
 function bind(fn, ctx) {
     return function() {
@@ -51,3 +76,4 @@ function bind(fn, ctx) {
     };
 }
 
+module.exports = Q;
